@@ -96,10 +96,12 @@
     </section>
 
     <script>
-      document.addEventListener("DOMContentLoaded", function () {
+      (function () {
         const tbody = document.querySelector("#product-table tbody");
         const thName = document.getElementById("th-name");
-        const arrow = thName.querySelector(".sort-arrow");
+        const arrow = (thName && thName.querySelector(".sort-arrow")) || {
+          textContent: "",
+        };
         const inputName = document.getElementById("input-name");
         const inputCategory = document.getElementById("input-category");
         const inputPrice = document.getElementById("input-price");
@@ -110,6 +112,7 @@
         let nameSortAsc = null;
 
         function renderTable() {
+          if (!tbody) return;
           tbody.innerHTML = "";
           const display = products.slice();
 
@@ -147,58 +150,67 @@
         }
 
         function updateArrow() {
+          if (!arrow) return;
           arrow.textContent =
             nameSortAsc === null ? "" : nameSortAsc ? "▲" : "▼";
         }
 
-        thName.addEventListener("click", function () {
-          nameSortAsc = nameSortAsc === null ? true : !nameSortAsc;
-          renderTable();
-        });
+        if (thName) {
+          thName.addEventListener("click", function () {
+            nameSortAsc = nameSortAsc === null ? true : !nameSortAsc;
+            renderTable();
+          });
+        }
 
-        btnAdd.addEventListener("click", function (e) {
-          e.preventDefault();
-          const name = (inputName.value || "").trim();
-          const category = (inputCategory.value || "").trim();
-          const price = Number(inputPrice.value);
-          const quantity = Number(inputQuantity.value);
+        if (btnAdd) {
+          btnAdd.addEventListener("click", function (e) {
+            e.preventDefault();
+            const name = ((inputName && inputName.value) || "").trim();
+            const category = (
+              (inputCategory && inputCategory.value) ||
+              ""
+            ).trim();
+            const price = Number(inputPrice && inputPrice.value);
+            const quantity = Number(inputQuantity && inputQuantity.value);
 
-          if (!name || name.length < 3) {
-            alert("Tên sản phẩm phải có ít nhất 3 ký tự");
-            return;
-          }
-          if (!isFinite(price) || price <= 0) {
-            alert("Đơn giá phải là số dương");
-            return;
-          }
-          if (!Number.isInteger(quantity) || quantity < 1) {
-            alert("Số lượng phải là số nguyên dương");
-            return;
-          }
+            if (!name || name.length < 3) {
+              alert("Tên sản phẩm phải có ít nhất 3 ký tự");
+              return;
+            }
+            if (!isFinite(price) || price <= 0) {
+              alert("Đơn giá phải là số dương");
+              return;
+            }
+            if (!Number.isInteger(quantity) || quantity < 1) {
+              alert("Số lượng phải là số nguyên dương");
+              return;
+            }
 
-          const newId = products.length
-            ? Math.max.apply(
-                null,
-                products.map(function (p) {
-                  return p.id || 0;
-                }),
-              ) + 1
-            : 1;
-          const newProduct = {
-            id: newId,
-            name: name,
-            category: category,
-            price: price,
-            quantity: quantity,
-          };
-          products.push(newProduct);
-          renderTable();
-          inputName.value = "";
-          inputCategory.value = "";
-          inputPrice.value = "";
-          inputQuantity.value = "";
-          inputName.focus();
-        });
+            const newId = products.length
+              ? Math.max.apply(
+                  null,
+                  products.map(function (p) {
+                    return p.id || 0;
+                  }),
+                ) + 1
+              : 1;
+            const newProduct = {
+              id: newId,
+              name: name,
+              category: category,
+              price: price,
+              quantity: quantity,
+            };
+            products.push(newProduct);
+            renderTable();
+            if (inputName) inputName.value = "";
+            if (inputCategory) inputCategory.value = "";
+            if (inputPrice) inputPrice.value = "";
+            if (inputQuantity) inputQuantity.value = "";
+            if (inputName && typeof inputName.focus === "function")
+              inputName.focus();
+          });
+        }
 
         const xhr = new XMLHttpRequest();
         xhr.onreadystatechange = function () {
@@ -216,7 +228,7 @@
         };
         xhr.open("GET", "products.json");
         xhr.send();
-      });
+      })();
     </script>
   </body>
 </html>
